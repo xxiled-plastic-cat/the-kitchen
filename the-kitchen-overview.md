@@ -19,4 +19,4 @@ Allow your NFT to be split into multiple unequal parts for fractional buying/sel
 Not specificlaly NFT related, but a general lottery protocol using network tokens
 
 ### trifle
-Bundling NFTs into a secondary NFT for selling/buying thorugh marketplaces. Contract holds original NFTs, trifle NFT is used as key to redeem original NFTs.
+Bundling NFTs into a secondary NFT for selling/buying through marketplaces. Contract holds original NFTs, trifle NFT is used as key to redeem original NFTs.
