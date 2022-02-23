@@ -1,46 +1,49 @@
 'reach 0.1';
 
 //duration, ticket limit, ticket cost, jackpot split (reperesented by the split for the winner)
-const lotteryParams = [UInt, UInt, UInt, UInt];
-
-const lotteryAPI = API('lotteryAPI', {
-  buyTicket: Fun([UInt], Bool),
-  cancelLottery: fun([], Bool)
-});
+const lotteryParams = Tuple(UInt, UInt, UInt, UInt);
+const tokenParams = Object({
+  name: Bytes(32), symbol: Bytes(8),
+  url: Bytes(96), metadata: Bytes(32),
+  amt: UInt});
 
 export const main = Reach.App(() => {
+
+  const lotteryAPI = API('lotteryAPI', {
+    buyTicket: Fun([UInt], Bool),
+    cancelLottery: Fun([], Bool),
+    drawLottery: Fun([], Address)
+  });
+
   const Owner = Participant('Owner', {
-    getLotteryParams: Fun([], lotteryParams)
+    getLotteryParams: Fun([], lotteryParams),
+    getTokenParams: Fun([], tokenParams)
   });
   const TicketBuyer = Participant('TicketBuyer', {
 
   });
   init();
 
-  //should mint the tickets in the contract
-
   Owner.only(() =>{
-    const [duration, ticketLimit, ticketCost, jackpotSplit] = declassify(interact.getLotteryParams());
+    const [duration, supply, ticketCost, jackpotSplit] = declassify(interact.getLotteryParams());
+    const { name, symbol, url, metadata, amt } = declassify(interact.getTokenParams());
   });
 
-  Owner.publish(duration, ticketLimit, ticketCost, jackpotSplit)
+  Owner.publish(duration, supply, ticketCost, jackpotSplit, name, symbol, url, metadata, amt)
     .pay(5);
+    const md1 = {name, symbol, url, metadata, supply};
+    const ticket = new Token(md1);
+    commit();
+
   TicketBuyer.publish();
   const ticketHolders = new Map(UInt);
-  commit();
 
-  const ticket = new Token({
-    name: "Lottery Ticket",
-    symbol: "LOTTO",
-    supply: ticketLimit,
-    decimals: 0
-  });
 
   const [timeRemaining, keepGoing] = makeDeadline(duration);
     const numBought = 
       parallelReduce(0)
-        .invariant(balance(ticketToken) == (ticketLimit - numBought))
-        .while(numBought < ticketLimit)
+        .invariant(balance(ticket) == (supply - numBought))
+        .while(numBought < supply)
         .api(lotteryAPI.buyTicket,    
           (pmt) => {
             assume(pmt == ticketCost); 
@@ -57,21 +60,37 @@ export const main = Reach.App(() => {
 
             return numBought+1;
           } )
-          .api(lotteryAPI.cancelLottery,
+          /* .api(lotteryAPI.cancelLottery,
             (apiReturn) => {
               //return all funds to participants
               Map.forEach(ticketHolders, (addr) => {
                 transfer(ticketCost).to(addr);
               });
               apiReturn(true);
-              return numBought + (ticketLimit - numBought);
-            })
+              return numBought + (supply - numBought);
+            }) */
+            //draw lottery
+            /* .api(lotteryAPI.drawLottery,
+              (apiReturn) => { //returns address
+                //return all funds to participants
+                Map.forEach(ticketHolders, (addr) => {
+                  transfer(ticketCost).to(addr);
+                });
+                apiReturn(true);
+                return numBought + (supply - numBought);
+              }) */
           .timeRemaining(timeRemaining());
             commit();
           
-          
-            assert(ticket.destroyed() == false);
-            ticket.destroy();
+          Owner.publish();
+          assert(ticket.supply() == supply - numBought);
+          ticket.burn();
+          assert(ticket.destroyed() == false);
+          ticket.destroy();
+
+            if(balance() > 0) {
+              transfer(balance()).to(Owner);
+            }
           
     commit();
     exit();
