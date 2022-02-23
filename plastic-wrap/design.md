@@ -1,0 +1,2 @@
+# plastic-wrap contract
+NFT wrapping contract - original NFT stored in contract as a vault, user is given a wrapped NFT in return which also acts as the key to retrieving the original NFT and closing the contract. Each iteration of the contract is specific to the user's wallet. Multiple NFTs can be wrapped within one contract.
