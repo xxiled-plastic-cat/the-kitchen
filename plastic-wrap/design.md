@@ -6,10 +6,10 @@ NFT Owner - supplies original NFT and receives the wrapped NFT in it's place
 
 ## What data is transferred
 Original NFT is sent and stored in contract
-wrapped NFT is minted and sent back  - requires clawback
+wrapped NFT is minted and sent back
 
 ## Contract duration
-Fixed time periods - 1 month, 3 months, 6 months
+Perpetual until closed
 
 ## Contract ending
 Contract ends after time period OR if wrapped NFT owner transfers the wrapped NFT back to the contract. Wrapped NFT will be minted with clawback to allow for wrapped NFT to be swapped back for original at end of time period.

@@ -36,7 +36,6 @@ export const main = Reach.App(() => {
     commit();
 
   TicketBuyer.publish();
-  const ticketHolders = new Map(UInt);
 
 
   const [timeRemaining, keepGoing] = makeDeadline(duration);
