@@ -22,7 +22,7 @@ export const main = Reach.App(() => {
 
   const Customer = Participant('Customer', {
     getStakingAmount: Fun([], UInt),
-    
+
   });
 
   const vOrder = View('Order', {
@@ -31,13 +31,15 @@ export const main = Reach.App(() => {
 
   init();
 
-  
+
   Chef.only(() => {
-    const [stakeTokenID, rewardTokenID, rewardSupply, networkTokenPayment] = declassify(interact.createStakingPool());
+    const [stakeTokenID, rewardTokenID, rewardSupply, networkTokenPayment]
+    = declassify(interact.createStakingPool());
     const dl = declassify(interact.getDeadline());
   });
 
-  Chef.publish(stakeTokenID, rewardTokenID, rewardSupply, networkTokenPayment, dl);
+  Chef.publish(
+    stakeTokenID, rewardTokenID, rewardSupply, networkTokenPayment, dl);
   commit();
 
   Customer.only(() => {
@@ -50,58 +52,58 @@ export const main = Reach.App(() => {
   commit();
   Chef.publish();
   const customersAtTheTable = new Map(UInt); // represents the users that are currently staking with their stake amount
- 
+
 
 
   const [timeRemaining, keepGoing] = makeDeadline(dl);
-  const rewardsPaid = 
+  const rewardsPaid =
     parallelReduce(0)
       .invariant(balance(rewardTokenID) == (rewardSupply - rewardsPaid))
       .paySpec([stakeTokenID])
       .while(rewardsPaid < rewardSupply)
       //API call to initially stake tokens in the contract
-      .api(hibachiAPI.sitAtTheTable,    
+      .api(hibachiAPI.sitAtTheTable,
         ([pmt, [sAmt, sTok]]) => {
-          assume(pmt == networkTokenPayment); 
+          assume(pmt == networkTokenPayment);
           assume(sAmt > 0);
-        },      
+        },
         (_) => [networkTokenPayment, [stakeAmount, stakeTokenID]]
         ,
         ([pmt, [sAmt, sTok]], apiReturn) => {
-          require(pmt == networkTokenPayment); 
+          require(pmt == networkTokenPayment);
           require(sAmt > 0);
           customersAtTheTable[this] = sAmt;
           vOrder.currentStake.set(sAmt);
           transfer(pmt).to(Chef);
 
-          apiReturn(0);      
+          apiReturn(0);
           return 0;
         } )
         //API call to collect rewards from staking - reward amount is calcualted on the front end
-        .api(hibachiAPI.catchShrimp,             
-          ([pmt, [sAmt, sTok]], reward, apiReturn) => {    
+        .api(hibachiAPI.catchShrimp,
+          ([pmt, [sAmt, sTok]], reward, apiReturn) => {
 
             transfer(reward).to(this);
-  
-            apiReturn(rewardsPaid+reward);      
+
+            apiReturn(rewardsPaid+reward);
             return rewardsPaid+reward;
           } )
           //API call to remove stake
           .api(hibachiAPI.leaveTheTable,
             ([pmt, [sAmt, sTok]], apiReturn) => {
-              
+
               const getStakeTotal = (m) => fromMaybe(m, (() => 0), ((x) => x));
               const totalStake = getStakeTotal(customersAtTheTable[this]);
               transfer(totalStake).to(this);
-    
-              apiReturn(true);      
+
+              apiReturn(true);
               return rewardsPaid;
             } )
 
         .timeRemaining(timeRemaining());
           commit();
-        
-        
-  
+
+
+
   exit();
 });
