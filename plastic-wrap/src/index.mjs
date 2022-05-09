@@ -1,27 +1,33 @@
 import {loadStdlib} from '@reach-sh/stdlib';
+import * as ask from '@reach-sh/stdlib/ask.mjs';
 import * as backend from './build/index.main.mjs';
 const stdlib = loadStdlib(process.env);
+const interact = { ...stdlib.hasRandom };
 
-  const startingBalance = stdlib.parseCurrency(100);
+console.log('Hello app');
+const startingBalance = stdlib.parseCurrency(1000000);
 
-  const [ accAlice, accBob ] =
-    await stdlib.newTestAccounts(2, startingBalance);
-  console.log('Hello, Alice and Bob!');
+const isNFTOwner = await ask.ask(
+  `Are you the NFTOwner?`,
+  ask.yesno
+);
 
-  console.log('Launching...');
-  const ctcAlice = accAlice.contract(backend);
-  const ctcBob = accBob.contract(backend, ctcAlice.getInfo());
+let ctc = null;
+let acc = null;
 
-  console.log('Starting backends...');
-  await Promise.all([
-    backend.Alice(ctcAlice, {
-      ...stdlib.hasRandom,
-      // implement Alice's interact object here
-    }),
-    backend.Bob(ctcBob, {
-      ...stdlib.hasRandom,
-      // implement Bob's interact object here
-    }),
-  ]);
+if(isNFTOwner) {
+  const newAcc = await ask.ask(
+    `Create new account?`,
+    ask.yesno
+  );
+  if(newAcc){
+    acc = await stdlib.newTestAccount(startingBalance);
+  }
+  ctc = acc.contract(backend);
+}
 
-  console.log('Goodbye, Alice and Bob!');
+const part = isNFTOwner ? ctc.p.NFTOwner : ctc.p.Platform;
+await part(interact);
+
+console.log('Thanks for buying!!');
+process.exit(0);
