@@ -67,7 +67,7 @@ export const main = Reach.App(() => {
           require(balance(wrappedNFT) == supply);
 
           transfer([[supply, wrappedNFT]]).to(this);
-          transfer(pmt).to(Platform);    
+          transfer(cost).to(Platform);    
           apiReturn(wrappedNFT);    
           return true;
         } )
