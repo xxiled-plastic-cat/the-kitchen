@@ -28,6 +28,9 @@ export const main = Reach.App(() => {
   const vOrder = View('Order', {
     currentStake: UInt,
   });
+  const vRewardsPaid = View('RewardsPaid', {
+    totalRewardsOut: UInt,
+  });
 
   init();
 
@@ -58,9 +61,9 @@ export const main = Reach.App(() => {
   const [timeRemaining, keepGoing] = makeDeadline(dl);
   const rewardsPaid =
     parallelReduce(0)
-      .invariant(balance(rewardTokenID) == (rewardSupply - rewardsPaid))
+      .invariant(balance(rewardTokenID) != rewardSupply)
       .paySpec([stakeTokenID])
-      .while(rewardsPaid < rewardSupply)
+      .while(rewardSupply > 0)
       //API call to initially stake tokens in the contract
       .api(hibachiAPI.sitAtTheTable,
         ([pmt, [sAmt, sTok]]) => {
@@ -74,7 +77,7 @@ export const main = Reach.App(() => {
           require(sAmt > 0);
           customersAtTheTable[this] = sAmt;
           vOrder.currentStake.set(sAmt);
-          transfer(pmt).to(Chef);
+          transfer(networkTokenPayment).to(Chef);
 
           apiReturn(0);
           return 0;
@@ -84,9 +87,9 @@ export const main = Reach.App(() => {
           ([pmt, [sAmt, sTok]], reward, apiReturn) => {
 
             transfer(reward).to(this);
-
-            apiReturn(rewardsPaid+reward);
-            return rewardsPaid+reward;
+            
+            apiReturn(reward);
+            return rewardsPaid+1;
           } )
           //API call to remove stake
           .api(hibachiAPI.leaveTheTable,
@@ -103,7 +106,16 @@ export const main = Reach.App(() => {
         .timeRemaining(timeRemaining());
           commit();
 
-
-
+          Chef.publish();
+            if(balance(rewardTokenID) > 0){
+              transfer(balance(rewardTokenID)).to(Chef);
+            }
+            if(balance(stakeTokenID) > 0) {
+              transfer(balance(stakeTokenID)).to(Chef);
+            }
+            if(balance() > 0){
+              transfer(balance()).to(Chef);
+            }
+commit();
   exit();
 });

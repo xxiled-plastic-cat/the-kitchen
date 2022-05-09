@@ -36,7 +36,6 @@ export const main = Reach.App(() => {
     commit();
 
   TicketBuyer.publish();
-  const TicketHolders = Map(UInt);
 
   const [timeRemaining, keepGoing] = makeDeadline(duration);
     const numBought = 
@@ -61,7 +60,7 @@ export const main = Reach.App(() => {
           } )
             //draw lottery
             .api(lotteryAPI.drawLottery,
-              (Address, apiReturn) => { //returns address
+              (winnerAddress, apiReturn) => { //returns address
                 //return all funds to participants
                 
                 apiReturn(true);
