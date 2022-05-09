@@ -36,7 +36,8 @@ export const main = Reach.App(() => {
       const dl = declassify(interact.getDeadline());
     });
 
-    Seller.publish(price, supply, tokenId, dl);
+    Seller.publish(price, supply, tokenId, dl)
+    .pay(10000);
       commit();
     Buyer.publish();
     commit();

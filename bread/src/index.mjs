@@ -2,27 +2,33 @@ import {loadStdlib} from '@reach-sh/stdlib';
 import * as ask from '@reach-sh/stdlib/ask.mjs';
 import * as backend from './build/index.main.mjs';
 const stdlib = loadStdlib(process.env);
+const interact = { ...stdlib.hasRandom };
 
+
+
+  console.log('Hello app');
   const startingBalance = stdlib.parseCurrency(1000000);
-
-  const acc = await stdlib.newTestAccount(startingBalance);
-  
-
-  console.log('Hello all test accts');
-  
-  const getBalanceGCard = async () => (await stdlib.balanceOf(accBuyer1, gCard.id));
 
   const isCreator = await ask.ask(
     `Are you the creator?`,
     ask.yesno
   );
-  const interact = { ...stdlib.hasRandom };
+  
   let ctc = null;
+  let acc = null;
+
   if(isCreator) {
+    const newAcc = await ask.ask(
+      `Create new account?`,
+      ask.yesno
+    );
+    if(newAcc){
+      acc = await stdlib.newTestAccount(startingBalance);
+    }
     ctc = acc.contract(backend);
+
     const gCard = await stdlib.launchToken(acc, "Algogator Membership Card", "GCARD");
     await gCard.mint(accSeller, startingBalance.mul(1));
-
 
     const creatorGCardBalance = await stdlib.balanceOf(acc, gCard.id);
     console.log(`You currently own ${creatorGCardBalance} membership cards`);
@@ -37,7 +43,7 @@ const stdlib = loadStdlib(process.env);
       };
 
       interact.getDeadline = async () => {
-        return { ETH: 100, ALGO: 1000, CFX: 1000 }[stdlib.connector];
+        return { ETH: 100, ALGO: 100000, CFX: 1000 }[stdlib.connector];
       };
       console.log(`Contract has been seeded by the creator ready for buyers!`);  
 
