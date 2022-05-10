@@ -27,15 +27,10 @@ const interact = { ...stdlib.hasRandom };
     }
     ctc = acc.contract(backend);
 
-    const gCard = await stdlib.launchToken(acc, "Algogator Membership Card", "GCARD");
-    await gCard.mint(accSeller, startingBalance.mul(1));
-
+    const gCard = await stdlib.launchToken(acc, "Algogator Membership Card", "GCARD", {decimals: 0, supply: 10});
+    
     const creatorGCardBalance = await stdlib.balanceOf(acc, gCard.id);
     console.log(`You currently own ${creatorGCardBalance} membership cards`);
-
-    ctc.getInfo().then((info) => {
-      console.log(`The contract is deployed as = ${JSON.stringify(info)}`); 
-    });
 
       interact.getMerchParams = async () => {
         console.log(`Getting merch params`);
@@ -45,11 +40,25 @@ const interact = { ...stdlib.hasRandom };
       interact.getDeadline = async () => {
         return { ETH: 100, ALGO: 100000, CFX: 1000 }[stdlib.connector];
       };
-      console.log(`Contract has been seeded by the creator ready for buyers!`);  
+
+      const ready = await ask.ask(
+        `Ready to deploy?`,
+        ask.yesno
+      );
+      if(ready){
+        const contractAddress = await ctc.getContractAddress();
+        console.log(`Contract has been seeded by the creator ready for buyers! Contract Address is: ${contractAddress}`);         
+    }
 
   } else {
     console.log(`Hello buyer!`);
-
+    const newAcc = await ask.ask(
+      `Create new account?`,
+      ask.yesno
+    );
+    if(newAcc){
+      acc = await stdlib.newTestAccount(startingBalance);
+    }
     const info = await ask.ask(
       `Please paste the contract information:`,
       JSON.parse

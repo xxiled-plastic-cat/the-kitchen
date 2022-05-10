@@ -30,6 +30,10 @@ export const main = Reach.App(() => {
   });
 
   init();
+
+  Seller.publish()
+    .pay(10000);
+  commit();
   
     Seller.only(() => {
       const [price, supply, tokenId] = declassify(interact.getMerchParams());
@@ -37,7 +41,6 @@ export const main = Reach.App(() => {
     });
 
     Seller.publish(price, supply, tokenId, dl)
-    .pay(10000);
       commit();
     Buyer.publish();
     commit();
