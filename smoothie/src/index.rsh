@@ -12,7 +12,7 @@ export const main = Reach.App(() => {
   const lotteryAPI = API('lotteryAPI', {
     buyTicket: Fun([UInt], Bool),
     cancelLottery: Fun([], Bool),
-    drawLottery: Fun([], Address)
+    drawLottery: Fun([Address], Bool)
   });
 
   const Owner = Participant('Owner', {
@@ -37,7 +37,6 @@ export const main = Reach.App(() => {
 
   TicketBuyer.publish();
 
-
   const [timeRemaining, keepGoing] = makeDeadline(duration);
     const numBought = 
       parallelReduce(0)
@@ -54,30 +53,19 @@ export const main = Reach.App(() => {
 
             transfer([[1, ticket]]).to(this);
 
-            ticketHolders[this] = 1;
+            //ticketHolders[this] = 1;
             apiReturn(true);    
 
             return numBought+1;
           } )
-          /* .api(lotteryAPI.cancelLottery,
-            (apiReturn) => {
-              //return all funds to participants
-              Map.forEach(ticketHolders, (addr) => {
-                transfer(ticketCost).to(addr);
-              });
-              apiReturn(true);
-              return numBought + (supply - numBought);
-            }) */
             //draw lottery
-            /* .api(lotteryAPI.drawLottery,
-              (apiReturn) => { //returns address
+            .api(lotteryAPI.drawLottery,
+              (winnerAddress, apiReturn) => { //returns address
                 //return all funds to participants
-                Map.forEach(ticketHolders, (addr) => {
-                  transfer(ticketCost).to(addr);
-                });
+                
                 apiReturn(true);
                 return numBought + (supply - numBought);
-              }) */
+              }) 
           .timeRemaining(timeRemaining());
             commit();
           
